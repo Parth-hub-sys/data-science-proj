@@ -1,0 +1,44 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Store Sales Forecast</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, select { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Sales Forecast</h2>
+  <label>Store Number: <input type="number" id="store_nbr" /></label><br/>
+  <label>Family: <input type="text" id="family" /></label><br/>
+  <label>Days to Forecast: <input type="number" id="days" value="30" /></label><br/>
+  <button onclick="getForecast()">Predict</button>
+
+  <h3>Forecast Result</h3>
+  <ul id="forecast_list"></ul>
+
+  <script>
+    async function getForecast() {
+      const store_nbr = document.getElementById('store_nbr').value;
+      const family = document.getElementById('family').value;
+      const days = document.getElementById('days').value;
+
+      const response = await fetch('/api/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ store_nbr, family, days })
+      });
+
+      const data = await response.json();
+      const list = document.getElementById('forecast_list');
+      list.innerHTML = '';
+      data.forecast.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item.date + ': ' + item.sales.toFixed(2);
+        list.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>

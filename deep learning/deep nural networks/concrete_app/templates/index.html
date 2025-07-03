@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concrete Strength Predictor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Concrete Strength Predictor</h1>
+
+    <form id="predict-form">
+      <div class="form-grid">
+        <label for="feature1">Cement:</label>
+        <input type="number" step="any" name="feature1" required>
+
+        <label for="feature2">Blast Furnace Slag:</label>
+        <input type="number" step="any" name="feature2" required>
+
+        <label for="feature3">Fly Ash:</label>
+        <input type="number" step="any" name="feature3" required>
+
+        <label for="feature4">Water:</label>
+        <input type="number" step="any" name="feature4" required>
+
+        <label for="feature5">Superplasticizer:</label>
+        <input type="number" step="any" name="feature5" required>
+
+        <label for="feature6">Coarse Aggregate:</label>
+        <input type="number" step="any" name="feature6" required>
+
+        <label for="feature7">Fine Aggregate:</label>
+        <input type="number" step="any" name="feature7" required>
+
+        <label for="feature8">Age (days):</label>
+        <input type="number" step="any" name="feature8" required>
+      </div>
+      <button type="submit">Predict</button>
+    </form>
+
+    <div id="result"></div>
+
+    
+    <hr>
+    <h3>Batch CSV Upload</h3>
+    <form id="csv-form" enctype="multipart/form-data">
+      <input type="file" name="file" accept=".csv" required>
+      <button type="submit">Upload & Predict</button>
+    </form>
+    <div id="batch-result"></div>
+    
+
+  </div>
+
+  <script>
+    const form = document.getElementById('predict-form');
+    const resultDiv = document.getElementById('result');
+
+    const csvForm = document.getElementById('csv-form');
+  const batchResultDiv = document.getElementById('batch-result');
+
+  csvForm.onsubmit = async (e) => {
+    e.preventDefault();
+    batchResultDiv.innerHTML = 'Uploading and predicting...';
+
+    const formData = new FormData(csvForm);
+
+    const response = await fetch('/batch_predict', {
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+    if (result.error) {
+      batchResultDiv.innerHTML = `<span style="color:red">${result.error}</span>`;
+    } else if (result.predictions) {
+      batchResultDiv.innerHTML = `
+        <h4>Batch Predictions:</h4>
+        <ol>
+          ${result.predictions.map((p, i) => `<li>Row ${i + 1}: ${p} MPa</li>`).join('')}
+        </ol>
+      `;
+    } else {
+      batchResultDiv.innerHTML = 'No predictions returned.';
+    }
+  };
+
+    // Spinner with analysis text
+    const spinnerContainer = document.createElement('div');
+    spinnerContainer.style.textAlign = 'center';
+
+    const spinner = document.createElement('div');
+    spinner.className = 'loader';
+
+    const message = document.createElement('div');
+    message.textContent = 'Calculating and analyzing test...';
+    message.style.marginTop = '10px';
+    message.style.fontWeight = 'bold';
+    message.style.color = '#333';
+
+    spinnerContainer.appendChild(spinner);
+    spinnerContainer.appendChild(message);
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      resultDiv.innerHTML = '';
+      resultDiv.appendChild(spinnerContainer);
+
+      const formData = new FormData(form);
+
+      setTimeout(async () => {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          body: formData
+        });
+        const result = await response.json();
+        resultDiv.innerHTML = result.prediction || result.error;
+      }, 1000);
+    };
+  </script>
+</body>
+</html>
